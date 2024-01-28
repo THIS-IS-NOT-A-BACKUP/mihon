@@ -18,8 +18,6 @@ import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.double
 import kotlinx.serialization.json.doubleOrNull
-import kotlinx.serialization.json.float
-import kotlinx.serialization.json.floatOrNull
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -49,13 +47,13 @@ class MyAnimeListApi(
     suspend fun getAccessToken(authCode: String): OAuth {
         return withIOContext {
             val formBody: RequestBody = FormBody.Builder()
-                .add("client_id", clientId)
+                .add("client_id", CLIENT_ID)
                 .add("code", authCode)
                 .add("code_verifier", codeVerifier)
                 .add("grant_type", "authorization_code")
                 .build()
             with(json) {
-                client.newCall(POST("$baseOAuthUrl/token", body = formBody))
+                client.newCall(POST("$BASE_OAUTH_URL/token", body = formBody))
                     .awaitSuccess()
                     .parseAs()
             }
@@ -65,7 +63,7 @@ class MyAnimeListApi(
     suspend fun getCurrentUser(): String {
         return withIOContext {
             val request = Request.Builder()
-                .url("$baseApiUrl/users/@me")
+                .url("$BASE_API_URL/users/@me")
                 .get()
                 .build()
             with(json) {
@@ -79,7 +77,7 @@ class MyAnimeListApi(
 
     suspend fun search(query: String): List<TrackSearch> {
         return withIOContext {
-            val url = "$baseApiUrl/manga".toUri().buildUpon()
+            val url = "$BASE_API_URL/manga".toUri().buildUpon()
                 // MAL API throws a 400 when the query is over 64 characters...
                 .appendQueryParameter("q", query.take(64))
                 .appendQueryParameter("nsfw", "true")
@@ -104,7 +102,7 @@ class MyAnimeListApi(
 
     suspend fun getMangaDetails(id: Int): TrackSearch {
         return withIOContext {
-            val url = "$baseApiUrl/manga".toUri().buildUpon()
+            val url = "$BASE_API_URL/manga".toUri().buildUpon()
                 .appendPath(id.toString())
                 .appendQueryParameter(
                     "fields",
@@ -180,7 +178,7 @@ class MyAnimeListApi(
 
     suspend fun findListItem(track: Track): Track? {
         return withIOContext {
-            val uri = "$baseApiUrl/manga".toUri().buildUpon()
+            val uri = "$BASE_API_URL/manga".toUri().buildUpon()
                 .appendPath(track.remote_id.toString())
                 .appendQueryParameter("fields", "num_chapters,my_list_status{start_date,finish_date}")
                 .build()
@@ -218,7 +216,7 @@ class MyAnimeListApi(
 
             // Check next page if there's more
             if (!obj["paging"]!!.jsonObject["next"]?.jsonPrimitive?.contentOrNull.isNullOrBlank()) {
-                matches + findListItems(query, offset + listPaginationAmount)
+                matches + findListItems(query, offset + LIST_PAGINATION_AMOUNT)
             } else {
                 matches
             }
@@ -227,9 +225,9 @@ class MyAnimeListApi(
 
     private suspend fun getListPage(offset: Int): JsonObject {
         return withIOContext {
-            val urlBuilder = "$baseApiUrl/users/@me/mangalist".toUri().buildUpon()
+            val urlBuilder = "$BASE_API_URL/users/@me/mangalist".toUri().buildUpon()
                 .appendQueryParameter("fields", "list_status{start_date,finish_date}")
-                .appendQueryParameter("limit", listPaginationAmount.toString())
+                .appendQueryParameter("limit", LIST_PAGINATION_AMOUNT.toString())
             if (offset > 0) {
                 urlBuilder.appendQueryParameter("offset", offset.toString())
             }
@@ -279,30 +277,29 @@ class MyAnimeListApi(
     }
 
     companion object {
-        // Registered under arkon's MAL account
-        private const val clientId = "f46004a9c16483b6d87b5bf10de56d97"
+        private const val CLIENT_ID = "c46c9e24640a64dad5be5ca7a1a53a0f"
 
-        private const val baseOAuthUrl = "https://myanimelist.net/v1/oauth2"
-        private const val baseApiUrl = "https://api.myanimelist.net/v2"
+        private const val BASE_OAUTH_URL = "https://myanimelist.net/v1/oauth2"
+        private const val BASE_API_URL = "https://api.myanimelist.net/v2"
 
-        private const val listPaginationAmount = 250
+        private const val LIST_PAGINATION_AMOUNT = 250
 
         private var codeVerifier: String = ""
 
-        fun authUrl(): Uri = "$baseOAuthUrl/authorize".toUri().buildUpon()
-            .appendQueryParameter("client_id", clientId)
+        fun authUrl(): Uri = "$BASE_OAUTH_URL/authorize".toUri().buildUpon()
+            .appendQueryParameter("client_id", CLIENT_ID)
             .appendQueryParameter("code_challenge", getPkceChallengeCode())
             .appendQueryParameter("response_type", "code")
             .build()
 
-        fun mangaUrl(id: Long): Uri = "$baseApiUrl/manga".toUri().buildUpon()
+        fun mangaUrl(id: Long): Uri = "$BASE_API_URL/manga".toUri().buildUpon()
             .appendPath(id.toString())
             .appendPath("my_list_status")
             .build()
 
         fun refreshTokenRequest(oauth: OAuth): Request {
             val formBody: RequestBody = FormBody.Builder()
-                .add("client_id", clientId)
+                .add("client_id", CLIENT_ID)
                 .add("refresh_token", oauth.refresh_token)
                 .add("grant_type", "refresh_token")
                 .build()
@@ -314,7 +311,7 @@ class MyAnimeListApi(
                 .add("Authorization", "Bearer ${oauth.access_token}")
                 .build()
 
-            return POST("$baseOAuthUrl/token", body = formBody, headers = headers)
+            return POST("$BASE_OAUTH_URL/token", body = formBody, headers = headers)
         }
 
         private fun getPkceChallengeCode(): String {
