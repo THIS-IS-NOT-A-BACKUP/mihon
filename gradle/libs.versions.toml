@@ -8,7 +8,7 @@ shizuku_version = "12.2.0"
 sqldelight = "2.0.0"
 sqlite = "2.4.0"
 voyager = "1.0.0"
-detekt = "1.23.1"
+detekt = "1.23.5"
 detektCompose = "0.3.11"
 
 [libraries]
@@ -43,7 +43,7 @@ preferencektx = "androidx.preference:preference-ktx:1.2.1"
 
 injekt-core = "com.github.inorichi.injekt:injekt-core:65b0440"
 
-coil-bom = { module = "io.coil-kt:coil-bom", version = "2.5.0" }
+coil-bom = { module = "io.coil-kt:coil-bom", version = "2.6.0" }
 coil-core = { module = "io.coil-kt:coil" }
 coil-gif = { module = "io.coil-kt:coil-gif" }
 coil-compose = { module = "io.coil-kt:coil-compose" }
@@ -70,7 +70,7 @@ moko-gradle = { module = "dev.icerock.moko:resources-generator", version.ref = "
 
 logcat = "com.squareup.logcat:logcat:0.1"
 
-firebase-analytics = "com.google.firebase:firebase-analytics-ktx:21.5.0"
+firebase-analytics = "com.google.firebase:firebase-analytics-ktx:21.5.1"
 
 aboutLibraries-gradle = { module = "com.mikepenz.aboutlibraries.plugin:aboutlibraries-plugin", version.ref = "aboutlib_version" }
 aboutLibraries-compose = { module = "com.mikepenz:aboutlibraries-compose-m3", version.ref = "aboutlib_version" }
@@ -87,7 +87,7 @@ sqldelight-android-paging = { module = "app.cash.sqldelight:androidx-paging3-ext
 sqldelight-dialects-sql = { module = "app.cash.sqldelight:sqlite-3-38-dialect", version.ref = "sqldelight" }
 sqldelight-gradle = { module = "app.cash.sqldelight:gradle-plugin", version.ref = "sqldelight" }
 
-junit = "org.junit.jupiter:junit-jupiter:5.10.1"
+junit = "org.junit.jupiter:junit-jupiter:5.10.2"
 kotest-assertions = "io.kotest:kotest-assertions-core:5.8.0"
 mockk = "io.mockk:mockk:1.13.9"
 
