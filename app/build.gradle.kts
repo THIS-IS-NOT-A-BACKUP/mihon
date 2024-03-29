@@ -237,6 +237,7 @@ dependencies {
     implementation(libs.compose.materialmotion)
     implementation(libs.swipe)
     implementation(libs.compose.webview)
+    implementation(libs.compose.grid)
 
 
     // Logging
@@ -254,6 +255,8 @@ dependencies {
     // For detecting memory leaks; see https://square.github.io/leakcanary/
     // debugImplementation(libs.leakcanary.android)
     implementation(libs.leakcanary.plumber)
+
+    testImplementation(kotlinx.coroutines.test)
 }
 
 androidComponents {
