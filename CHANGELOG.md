@@ -13,6 +13,7 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 ## [Unreleased]
 ### Added
 - Add option to always decode long strip images with SSIV
+  - Change option label ([@AntsyLich](https://github.com/AntsyLich)) ([#1835](https://github.com/mihonapp/mihon/pull/1835))   
 - Added option to enable incognito per extension ([@sdaqo](https://github.com/sdaqo), [@AntsyLich](https://github.com/AntsyLich)) ([#157](https://github.com/mihonapp/mihon/pull/157))
 - Add button to favorite manga from history screen ([@Animeboynz](https://github.com/Animeboynz)) ([#1733](https://github.com/mihonapp/mihon/pull/1733))
 - Add Monochrome theme (made with e-ink displays in mind) ([@MajorTanya](https://github.com/MajorTanya)) ([#1752](https://github.com/mihonapp/mihon/pull/1752))
@@ -29,6 +30,7 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 - Migrate to newer Bangumi API ([@MajorTanya](https://github.com/MajorTanya)) ([#1748](https://github.com/mihonapp/mihon/pull/1748))
   - Now showing manga starting dates in search
   - Reduced request load by 2-4x in certain situations
+- Bump default user agent
 
 ### Fixed
 - Fix MAL `main_picture` nullability breaking search if a result doesn't have a cover set ([@MajorTanya](https://github.com/MajorTanya)) ([#1618](https://github.com/mihonapp/mihon/pull/1618))
