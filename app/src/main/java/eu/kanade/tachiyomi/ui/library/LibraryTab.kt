@@ -48,6 +48,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import mihon.feature.migration.config.MigrationConfigScreen
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.category.model.Category
@@ -110,7 +111,7 @@ data object LibraryTab : Tab {
                 val title = state.getToolbarTitle(
                     defaultTitle = stringResource(MR.strings.label_library),
                     defaultCategoryTitle = stringResource(MR.strings.label_default),
-                    page = screenModel.activeCategoryIndex,
+                    page = state.coercedActiveCategoryIndex,
                 )
                 LibraryToolbar(
                     hasActiveFilters = state.hasActiveFilters,
@@ -120,7 +121,7 @@ data object LibraryTab : Tab {
                     onClickSelectAll = screenModel::selectAll,
                     onClickInvertSelection = screenModel::invertSelection,
                     onClickFilter = screenModel::showSettingsDialog,
-                    onClickRefresh = { onClickRefresh(screenModel.activeCategory) },
+                    onClickRefresh = { onClickRefresh(state.activeCategory) },
                     onClickGlobalUpdate = { onClickRefresh(null) },
                     onClickOpenRandomManga = {
                         scope.launch {
@@ -149,6 +150,11 @@ data object LibraryTab : Tab {
                     onDownloadClicked = screenModel::performDownloadAction
                         .takeIf { state.selectedManga.fastAll { !it.isLocal() } },
                     onDeleteClicked = screenModel::openDeleteMangaDialog,
+                    onMigrateClicked = {
+                        val selection = state.selection
+                        screenModel.clearSelection()
+                        navigator.push(MigrationConfigScreen(selection))
+                    },
                 )
             },
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -177,10 +183,10 @@ data object LibraryTab : Tab {
                         searchQuery = state.searchQuery,
                         selection = state.selection,
                         contentPadding = contentPadding,
-                        currentPage = { screenModel.activeCategoryIndex },
+                        currentPage = state.coercedActiveCategoryIndex,
                         hasActiveFilters = state.hasActiveFilters,
                         showPageTabs = state.showCategoryTabs || !state.searchQuery.isNullOrEmpty(),
-                        onChangeCurrentPage = { screenModel.activeCategoryIndex = it },
+                        onChangeCurrentPage = screenModel::updateActiveCategoryIndex,
                         onClickManga = { navigator.push(MangaScreen(it)) },
                         onContinueReadingClicked = { it: LibraryManga ->
                             scope.launchIO {
@@ -200,7 +206,7 @@ data object LibraryTab : Tab {
                             screenModel.toggleRangeSelection(category, manga)
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         },
-                        onRefresh = { onClickRefresh(screenModel.activeCategory) },
+                        onRefresh = { onClickRefresh(state.activeCategory) },
                         onGlobalSearchClicked = {
                             navigator.push(GlobalSearchScreen(screenModel.state.value.searchQuery ?: ""))
                         },
@@ -219,7 +225,7 @@ data object LibraryTab : Tab {
                 LibrarySettingsDialog(
                     onDismissRequest = onDismissRequest,
                     screenModel = settingsScreenModel,
-                    category = screenModel.activeCategory,
+                    category = state.activeCategory,
                 )
             }
             is LibraryScreenModel.Dialog.ChangeCategory -> {
