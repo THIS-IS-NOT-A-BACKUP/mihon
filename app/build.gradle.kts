@@ -26,8 +26,8 @@ android {
     defaultConfig {
         applicationId = "app.mihon"
 
-        versionCode = 19
-        versionName = "0.19.5"
+        versionCode = 20
+        versionName = "0.19.7"
 
         buildConfigField("String", "COMMIT_COUNT", "\"${getLatestCommitCount()}\"")
         buildConfigField("String", "COMMIT_SHA", "\"${getLatestCommitSha()}\"")
@@ -89,8 +89,8 @@ android {
     }
 
     sourceSets {
-        getByName("preview").res.directories.add("src/debug/res")
-        getByName("benchmark").res.directories.add("src/debug/res")
+        getByName("preview").res.srcDirs("src/debug/res")
+        getByName("benchmark").res.srcDirs("src/debug/res")
     }
 
     splits {
@@ -139,6 +139,10 @@ android {
         viewBinding = true
         buildConfig = true
         aidl = true
+
+        // Disable some unused things
+        renderScript = false
+        shaders = false
     }
 
     lint {
