@@ -52,6 +52,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 import logcat.LogPriority
+import mihon.app.di.appGraph
 import tachiyomi.core.common.util.system.logcat
 import java.util.concurrent.Executors
 import kotlin.math.abs
@@ -65,6 +66,8 @@ open class WebGpuViewer(
 ) : Viewer {
 
     open val isContinuous: Boolean = false
+
+    val readerPreferences by lazy { activity.appGraph.readerPreferences }
 
     private fun readerBackgroundColor(): Int = activity.baseContext.readerBackgroundColor(config.theme)
 
@@ -186,7 +189,7 @@ open class WebGpuViewer(
     /**
      * Configuration used by the pager, like allow taps, scale mode on images, page transitions...
      */
-    val config = WebGpuConfig(this, scope)
+    val config = WebGpuConfig(this, scope, readerPreferences)
 
     var viewerChapters: ViewerChapters? = null
 
@@ -881,6 +884,7 @@ open class WebGpuViewer(
                             oldImagePage.cleanup()
                         }
                         applyWideZoomIfNeeded(page)
+                        applyFitModeAnchor(page.imagePage)
                         pager.state.invalidate()
                     } else {
                         if (pageInCache(page)) page.state = PageState.IDLE
@@ -1012,6 +1016,69 @@ open class WebGpuViewer(
             val imageTopY = (screenH - imageOnScreen) / 2f
             val trimTopY = imageTopY + trimTop * wideScale
             if (trimTopY < cutoutTopPx) (cutoutTopPx - trimTopY) / (wideScale * screenH) else 0f
+        }
+    }
+
+    private fun applyFitModeAnchor(page: ImagePage) {
+        if (page.homeScaleOverride != null) return
+
+        val scaleType = config.imageScaleType
+        if (scaleType != 3 && scaleType != 4 && scaleType != 5) return
+
+        val image = page.image ?: return
+        if (image.position != Image.Position.SINGLE) return
+
+        val screenW = pager.state.width
+        val screenH = pager.state.height
+        if (screenW <= 0 || screenH <= 0) return
+
+        val w = page.trimWidth.toFloat()
+        val h = page.trimHeight.toFloat()
+        if (w <= 0f || h <= 0f) return
+
+        val cutoutTopPx = pager.state.cutoutTopPx
+        val contentW = screenW.toFloat()
+        val contentH = if (pager.state.avoidCutout && cutoutTopPx > 0f) screenH - cutoutTopPx else screenH.toFloat()
+
+        val homeScale = when (scaleType) {
+            3 -> contentW / w
+            4 -> contentH / h
+            else -> 1f // original size
+        }.coerceAtLeast(0.01f)
+        page.homeScaleOverride = homeScale
+
+        if (scaleType == 5) { // original size
+            val minScaleComputed = minOf(contentW / page.width, contentH / page.height).coerceAtLeast(0.01f)
+            if (homeScale < minScaleComputed) {
+                page.minScale = homeScale
+            }
+        }
+
+        // zoom start for fit height/original size
+        page.homeXOverride = if (scaleType == 4 || scaleType == 5) {
+            val maxX = maxOf(0f, (page.width.toFloat() / screenW - 1f / homeScale) / 2f)
+            when (config.imageZoomType) {
+                ZoomStartPosition.LEFT -> maxX
+                ZoomStartPosition.RIGHT -> -maxX
+                ZoomStartPosition.CENTER -> 0f
+            }
+        } else {
+            null
+        }
+
+        // push below cutout for fit width/original size
+        val trimTop = image.trim?.top ?: 0
+        val imageTopY = (screenH - page.height * homeScale) / 2f
+        val trimTopY = imageTopY + trimTop * homeScale
+        page.homeYOverride = if ((scaleType == 3 || scaleType == 5) && h * homeScale > screenH) {
+            val target = if (pager.state.avoidCutout && cutoutTopPx > 0f) {
+                if (pager.state.alwaysAvoidCutout) cutoutTopPx / 2f else cutoutTopPx
+            } else {
+                0f
+            }
+            maxOf(0f, (target - trimTopY) / (homeScale * screenH))
+        } else {
+            null
         }
     }
 
